@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tenna Boss Fight - Hard Mode</title>
+    <style>
+        body { background: #050505; color: #00ffff; display: flex; flex-direction: column; align-items: center; font-family: 'Courier New', monospace; }
+        #game-container { position: relative; width: 400px; height: 600px; border: 10px solid #333; background: #000; overflow: hidden; box-shadow: 0 0 20px #00ffff; }
+        
+        .receptors { display: flex; justify-content: space-around; position: absolute; top: 20px; width: 400px; z-index: 2; }
+        .receptor { width: 60px; height: 60px; border: 3px solid #00ffff; display: flex; align-items: center; justify-content: center; opacity: 0.3; transition: 0.1s; }
+        .active { opacity: 1 !important; background-color: #00ffff; box-shadow: 0 0 15px #00ffff; }
+        
+        .note { position: absolute; width: 60px; height: 60px; background: #00ffff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: black; }
+        
+        .btn-config { padding: 10px 20px; margin: 5px; cursor: pointer; background: #222; color: #00ffff; border: 1px solid #00ffff; }
+        .btn-waiting { background: #ff0000 !important; color: white !important; }
+    </style>
+</head>
+<body>
+
+    <h1>BOSS FIGHT: TENNA</h1>
+    <button onclick="startGame()" style="padding: 10px 20px; cursor:pointer; margin-bottom:10px;">INICIAR MODO HARD</button>
+    
+    <div id="game-container">
+        <div class="receptors">
+            <div class="receptor" id="rect-left">←</div>
+            <div class="receptor" id="rect-down">↓</div>
+            <div class="receptor" id="rect-up">↑</div>
+            <div class="receptor" id="rect-right">→</div>
+        </div>
+    </div>
+
+    <div id="config-menu" style="margin-top: 20px; text-align: center;">
+        <h3>Controles</h3>
+        <button class="btn-config" id="btn-left" onclick="prepareRemap('left')">Esq: <span id="key-left">A</span></button>
+        <button class="btn-config" id="btn-down" onclick="prepareRemap('down')">Baixo: <span id="key-down">S</span></button>
+        <button class="btn-config" id="btn-up" onclick="prepareRemap('up')">Cima: <span id="key-up">W</span></button>
+        <button class="btn-config" id="btn-right" onclick="prepareRemap('right')">Dir: <span id="key-right">D</span></button>
+    </div>
+
+    <script>
+        // CONFIGURAÇÕES DE DIFICULDADE
+        const SPEED = 8; // Aumente esse número para ficar mais rápido (ex: 10, 12)
+        
+        let controls = JSON.parse(localStorage.getItem('myGameControls')) || { left: 'a', down: 's', up: 'w', right: 'd' };
+        let isRemapping = null;
+        let gameRunning = false;
+        let activeNotes = [];
+        const container = document.getElementById('game-container');
+
+        // CHART: Muito mais notas agora!
+        const chart = [
+            { delay: 1000, lane: 'left' }, { delay: 1200, lane: 'down' },
+            { delay: 1400, lane: 'up' },   { delay: 1600, lane: 'right' },
+            { delay: 2000, lane: 'left' }, { delay: 2200, lane: 'left' },
+            { delay: 2500, lane: 'up' },   { delay: 2700, lane: 'up' },
+            { delay: 3000, lane: 'right' }, { delay: 3200, lane: 'down' },
+            { delay: 3500, lane: 'left' }, { delay: 3700, lane: 'right' },
+            { delay: 4000, lane: 'down' }, { delay: 4200, lane: 'up' }
+        ];
+
+        function startGame() {
+            if (gameRunning) return;
+            gameRunning = true;
+            chart.forEach(noteData => {
+                setTimeout(() => spawnNote(noteData.lane), noteData.delay);
+            });
+            requestAnimationFrame(updateGame);
+        }
+
+        function spawnNote(lane) {
+            const note = document.createElement('div');
+            note.className = 'note';
+            note.style.top = '600px'; 
+            const pos = { 'left': 20, 'down': 120, 'up': 220, 'right': 320 };
+            note.style.left = pos[lane] + 'px';
+            note.dataset.lane = lane;
+            container.appendChild(note);
+            activeNotes.push(note);
+        }
+
+        function updateGame() {
+            if (!gameRunning) return;
+
+            activeNotes.forEach((note, index) => {
+                let top = parseInt(note.style.top);
+                // Velocidade baseada na constante SPEED
+                note.style.top = (top - SPEED) + 'px'; 
+
+                if (top < -60) {
+                    note.remove();
+                    activeNotes.splice(index, 1);
+                }
+            });
+
+            requestAnimationFrame(updateGame);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (isRemapping) { 
+                const newKey = e.key.toLowerCase();
+                controls[isRemapping] = newKey;
+                localStorage.setItem('myGameControls', JSON.stringify(controls));
+                const btn = document.getElementById('btn-' + isRemapping);
+                btn.classList.remove('btn-waiting');
+                btn.innerHTML = isRemapping.charAt(0).toUpperCase() + isRemapping.slice(1) + ": <span id='key-" + isRemapping + "'>" + newKey.toUpperCase() + "</span>";
+                isRemapping = null; 
+                return; 
+            }
+
+            const pressedKey = e.key.toLowerCase();
+            const action = Object.keys(controls).find(k => controls[k] === pressedKey);
+            
+            if (action) {
+                const rect = document.getElementById('rect-' + action);
+                rect.classList.add('active');
+                setTimeout(() => rect.classList.remove('active'), 100);
+
+                activeNotes.forEach((note, index) => {
+                    let noteTop = parseInt(note.style.top);
+                    if (note.dataset.lane === action && noteTop > 0 && noteTop < 80) {
+                        note.remove();
+                        activeNotes.splice(index, 1);
+                        console.log("HIT!");
+                    }
+                });
+            }
+        });
+
+        function prepareRemap(action) { 
+            document.activeElement.blur(); 
+            isRemapping = action; 
+            const btn = document.getElementById('btn-'+action);
+            btn.classList.add('btn-waiting');
+            btn.innerText = "PRESSIONE UMA TECLA...";
+        }
+    </script>
+</body>
+</html>
