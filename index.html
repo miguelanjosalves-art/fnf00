@@ -1,140 +1,517 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
-    <title>Tenna Boss Fight - Hard Mode</title>
+    <title>Tenna Boss Fight - Rhythm Engine</title>
+
     <style>
-        body { background: #050505; color: #00ffff; display: flex; flex-direction: column; align-items: center; font-family: 'Courier New', monospace; }
-        #game-container { position: relative; width: 400px; height: 600px; border: 10px solid #333; background: #000; overflow: hidden; box-shadow: 0 0 20px #00ffff; }
-        
-        .receptors { display: flex; justify-content: space-around; position: absolute; top: 20px; width: 400px; z-index: 2; }
-        .receptor { width: 60px; height: 60px; border: 3px solid #00ffff; display: flex; align-items: center; justify-content: center; opacity: 0.3; transition: 0.1s; }
-        .active { opacity: 1 !important; background-color: #00ffff; box-shadow: 0 0 15px #00ffff; }
-        
-        .note { position: absolute; width: 60px; height: 60px; background: #00ffff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: black; }
-        
-        .btn-config { padding: 10px 20px; margin: 5px; cursor: pointer; background: #222; color: #00ffff; border: 1px solid #00ffff; }
-        .btn-waiting { background: #ff0000 !important; color: white !important; }
+        body {
+            background: #111;
+            color: white;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #controls-sidebar {
+            width: 220px;
+            padding: 20px;
+            border-right: 2px solid #ff00ff;
+        }
+
+        .control-input {
+            width: 40px;
+            text-align: center;
+            background: #222;
+            color: #ff00ff;
+            border: 1px solid #ff00ff;
+            margin-bottom: 10px;
+        }
+
+        #game-container {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            border: 10px solid #ff00ff;
+            background: black;
+            overflow: hidden;
+            margin-left: 20px;
+        }
+
+        #countdown {
+            position: absolute;
+            top: 250px;
+            width: 100%;
+            text-align: center;
+            font-size: 80px;
+            color: #ff00ff;
+            z-index: 20;
+            display: none;
+        }
+
+        .receptor {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #ff00ff;
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .active {
+            background: #ff00ff;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+
+        .note {
+            position: absolute;
+            width: 60px;
+            height: 20px;
+            background: #ff00ff;
+            border-radius: 4px;
+            box-shadow: 0 0 10px #ff00ff;
+        }
+
+        button {
+            background: #111;
+            color: #ff00ff;
+            border: 2px solid #ff00ff;
+            padding: 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: #ff00ff;
+            color: black;
+        }
+
+        #info {
+            margin-top: 20px;
+            color: #ff00ff;
+            font-size: 14px;
+        }
     </style>
 </head>
+
 <body>
 
-    <h1>BOSS FIGHT: TENNA</h1>
-    <button onclick="startGame()" style="padding: 10px 20px; cursor:pointer; margin-bottom:10px;">INICIAR MODO HARD</button>
-    
-    <div id="game-container">
-        <div class="receptors">
-            <div class="receptor" id="rect-left">←</div>
-            <div class="receptor" id="rect-down">↓</div>
-            <div class="receptor" id="rect-up">↑</div>
-            <div class="receptor" id="rect-right">→</div>
+    <div id="controls-sidebar">
+
+        <h2>CONTROLES</h2>
+
+        <label>
+            Esquerda:
+            <input type="text" id="key-left" class="control-input" value="a">
+        </label>
+        <br>
+
+        <label>
+            Baixo:
+            <input type="text" id="key-down" class="control-input" value="s">
+        </label>
+        <br>
+
+        <label>
+            Cima:
+            <input type="text" id="key-up" class="control-input" value="w">
+        </label>
+        <br>
+
+        <label>
+            Direita:
+            <input type="text" id="key-right" class="control-input" value="d">
+        </label>
+
+        <br><br>
+
+        <button onclick="saveControls()">
+            SALVAR
+        </button>
+
+        <div id="info">
+            Acerte a primeira nota para iniciar a música
         </div>
+
     </div>
 
-    <div id="config-menu" style="margin-top: 20px; text-align: center;">
-        <h3>Controles</h3>
-        <button class="btn-config" id="btn-left" onclick="prepareRemap('left')">Esq: <span id="key-left">A</span></button>
-        <button class="btn-config" id="btn-down" onclick="prepareRemap('down')">Baixo: <span id="key-down">S</span></button>
-        <button class="btn-config" id="btn-up" onclick="prepareRemap('up')">Cima: <span id="key-up">W</span></button>
-        <button class="btn-config" id="btn-right" onclick="prepareRemap('right')">Dir: <span id="key-right">D</span></button>
+    <div id="game-container">
+
+        <div id="countdown">3</div>
+
+        <div class="receptor" id="rect-left" style="left:20px;"></div>
+        <div class="receptor" id="rect-down" style="left:120px;"></div>
+        <div class="receptor" id="rect-up" style="left:220px;"></div>
+        <div class="receptor" id="rect-right" style="left:320px;"></div>
+
+        <button id="start-btn" style="position:absolute; top:300px; left:120px; z-index:30;" onclick="startCountdown()">
+
+            INICIAR BOSS
+
+        </button>
+
     </div>
+
+    <div id="youtube-player" style="display:none;"></div>
 
     <script>
-        // CONFIGURAÇÕES DE DIFICULDADE
-        const SPEED = 8; // Aumente esse número para ficar mais rápido (ex: 10, 12)
-        
-        let controls = JSON.parse(localStorage.getItem('myGameControls')) || { left: 'a', down: 's', up: 'w', right: 'd' };
-        let isRemapping = null;
-        let gameRunning = false;
-        let activeNotes = [];
-        const container = document.getElementById('game-container');
 
-        // CHART: Muito mais notas agora!
-        const chart = [
-            { delay: 1000, lane: 'left' }, { delay: 1200, lane: 'down' },
-            { delay: 1400, lane: 'up' },   { delay: 1600, lane: 'right' },
-            { delay: 2000, lane: 'left' }, { delay: 2200, lane: 'left' },
-            { delay: 2500, lane: 'up' },   { delay: 2700, lane: 'up' },
-            { delay: 3000, lane: 'right' }, { delay: 3200, lane: 'down' },
-            { delay: 3500, lane: 'left' }, { delay: 3700, lane: 'right' },
-            { delay: 4000, lane: 'down' }, { delay: 4200, lane: 'up' }
-        ];
+        // YOUTUBE API
+
+        const tag = document.createElement('script');
+
+        tag.src = "https://www.youtube.com/iframe_api";
+
+        document.head.appendChild(tag);
+
+        // VARIÁVEIS
+
+        let player;
+
+        let gameRunning = false;
+
+        let musicStarted = false;
+
+        let chart = [];
+
+        let visualTime = 0;
+
+        // CONTROLES
+
+        let controls = JSON.parse(localStorage.getItem('controls')) || {
+
+            left: 'a',
+            down: 's',
+            up: 'w',
+            right: 'd'
+
+        };
+
+        document.getElementById('key-left').value = controls.left;
+        document.getElementById('key-down').value = controls.down;
+        document.getElementById('key-up').value = controls.up;
+        document.getElementById('key-right').value = controls.right;
+
+        // SALVAR
+
+        function saveControls() {
+
+            controls = {
+
+                left: document.getElementById('key-left').value.toLowerCase(),
+                down: document.getElementById('key-down').value.toLowerCase(),
+                up: document.getElementById('key-up').value.toLowerCase(),
+                right: document.getElementById('key-right').value.toLowerCase()
+
+            };
+
+            localStorage.setItem(
+                'controls',
+                JSON.stringify(controls)
+            );
+
+            alert("Controles salvos!");
+
+        }
+
+        // CONTAGEM
+
+        function startCountdown() {
+
+            document.getElementById('start-btn').style.display = 'none';
+
+            const cd = document.getElementById('countdown');
+
+            cd.style.display = 'block';
+
+            let count = 3;
+
+            cd.innerText = count;
+
+            const timer = setInterval(() => {
+
+                count--;
+
+                cd.innerText = count > 0 ? count : "GO!";
+
+                if (count < 0) {
+
+                    clearInterval(timer);
+
+                    cd.style.display = 'none';
+
+                    startGame();
+
+                }
+
+            }, 1000);
+
+        }
+
+        // START
 
         function startGame() {
-            if (gameRunning) return;
+
             gameRunning = true;
-            chart.forEach(noteData => {
-                setTimeout(() => spawnNote(noteData.lane), noteData.delay);
-            });
+
             requestAnimationFrame(updateGame);
+
         }
 
-        function spawnNote(lane) {
-            const note = document.createElement('div');
-            note.className = 'note';
-            note.style.top = '600px'; 
-            const pos = { 'left': 20, 'down': 120, 'up': 220, 'right': 320 };
-            note.style.left = pos[lane] + 'px';
-            note.dataset.lane = lane;
-            container.appendChild(note);
-            activeNotes.push(note);
+        // MAPA MAIS NATURAL
+
+        function generateChart() {
+
+            chart = [];
+
+            const bpm = 128;
+
+            const beat = 60 / bpm;
+
+            const lanes = [
+                'left',
+                'down',
+                'up',
+                'right'
+            ];
+
+            let lastLane = null;
+
+            // MAIS RÁPIDO
+            for (let i = 0.5; i < 170; i += beat / 2) {
+
+                // CHANCE MAIS NATURAL
+                if (Math.random() < 0.72) {
+
+                    // ESCOLHE UMA LANE DIFERENTE
+                    let lane =
+                        lanes[Math.floor(Math.random() * 4)];
+
+                    while (lane === lastLane) {
+
+                        lane =
+                            lanes[Math.floor(Math.random() * 4)];
+
+                    }
+
+                    lastLane = lane;
+
+                    // NOTA NORMAL
+                    chart.push({
+
+                        time: i,
+                        lane: lane,
+                        hit: false
+
+                    });
+
+                    // RARAMENTE DUPLA
+                    if (Math.random() < 0.10) {
+
+                        let secondLane =
+                            lanes[Math.floor(Math.random() * 4)];
+
+                        while (
+                            secondLane === lane
+                        ) {
+
+                            secondLane =
+                                lanes[Math.floor(Math.random() * 4)];
+
+                        }
+
+                        chart.push({
+
+                            time: i,
+                            lane: secondLane,
+                            hit: false
+
+                        });
+
+                    }
+
+                }
+
+            }
+
         }
+
+        // YOUTUBE READY
+
+        function onYouTubeIframeAPIReady() {
+
+            player = new YT.Player('youtube-player', {
+
+                videoId: 'F2PJbTuZlTU',
+
+                events: {
+
+                    'onReady': () => {
+
+                        generateChart();
+
+                    }
+
+                }
+
+            });
+
+        }
+
+        // UPDATE
 
         function updateGame() {
+
             if (!gameRunning) return;
 
-            activeNotes.forEach((note, index) => {
-                let top = parseInt(note.style.top);
-                // Velocidade baseada na constante SPEED
-                note.style.top = (top - SPEED) + 'px'; 
+            // TEMPO VISUAL
+            if (!musicStarted) {
 
-                if (top < -60) {
-                    note.remove();
-                    activeNotes.splice(index, 1);
+                visualTime += 0.018;
+
+            } else {
+
+                visualTime = player.getCurrentTime();
+
+            }
+
+            const currentTime = visualTime;
+
+            // MAIS RÁPIDO
+            const SPEED = 500;
+
+            const RECEPTOR_Y = 500;
+
+            chart.forEach(note => {
+
+                if (note.hit) return;
+
+                let y =
+                    (currentTime - note.time) * SPEED
+                    + RECEPTOR_Y;
+
+                // CRIA
+                if (y > -80 && y < 700 && !note.el) {
+
+                    note.el = document.createElement('div');
+
+                    note.el.className = 'note';
+
+                    document
+                        .getElementById('game-container')
+                        .appendChild(note.el);
+
                 }
+
+                if (note.el) {
+
+                    const pos = {
+
+                        left: 20,
+                        down: 120,
+                        up: 220,
+                        right: 320
+
+                    };
+
+                    note.el.style.left =
+                        pos[note.lane] + 'px';
+
+                    note.el.style.top =
+                        y + 'px';
+
+                    // REMOVE
+                    if (y > 700) {
+
+                        note.el.remove();
+
+                        note.hit = true;
+
+                    }
+
+                }
+
             });
 
             requestAnimationFrame(updateGame);
+
         }
+
+        // INPUT
 
         window.addEventListener('keydown', (e) => {
-            if (isRemapping) { 
-                const newKey = e.key.toLowerCase();
-                controls[isRemapping] = newKey;
-                localStorage.setItem('myGameControls', JSON.stringify(controls));
-                const btn = document.getElementById('btn-' + isRemapping);
-                btn.classList.remove('btn-waiting');
-                btn.innerHTML = isRemapping.charAt(0).toUpperCase() + isRemapping.slice(1) + ": <span id='key-" + isRemapping + "'>" + newKey.toUpperCase() + "</span>";
-                isRemapping = null; 
-                return; 
-            }
 
-            const pressedKey = e.key.toLowerCase();
-            const action = Object.keys(controls).find(k => controls[k] === pressedKey);
-            
-            if (action) {
-                const rect = document.getElementById('rect-' + action);
-                rect.classList.add('active');
-                setTimeout(() => rect.classList.remove('active'), 100);
+            const key = e.key.toLowerCase();
 
-                activeNotes.forEach((note, index) => {
-                    let noteTop = parseInt(note.style.top);
-                    if (note.dataset.lane === action && noteTop > 0 && noteTop < 80) {
-                        note.remove();
-                        activeNotes.splice(index, 1);
-                        console.log("HIT!");
+            const lane =
+                Object.keys(controls)
+                    .find(k => controls[k] === key);
+
+            if (!lane) return;
+
+            // ANIMAÇÃO
+
+            const rect =
+                document.getElementById('rect-' + lane);
+
+            rect.classList.add('active');
+
+            setTimeout(() => {
+
+                rect.classList.remove('active');
+
+            }, 100);
+
+            // HIT
+
+            chart.forEach(n => {
+
+                const currentTime = visualTime;
+
+                if (
+
+                    n.lane === lane &&
+                    !n.hit &&
+                    Math.abs(
+                        n.time - currentTime
+                    ) < 0.14
+
+                ) {
+
+                    // PRIMEIRO HIT
+                    if (!musicStarted) {
+
+                        musicStarted = true;
+
+                        player.playVideo();
+
+                        document.getElementById('info')
+                            .innerText = "Música iniciada!";
+
                     }
-                });
-            }
+
+                    n.hit = true;
+
+                    if (n.el) {
+
+                        n.el.remove();
+
+                    }
+
+                }
+
+            });
+
         });
 
-        function prepareRemap(action) { 
-            document.activeElement.blur(); 
-            isRemapping = action; 
-            const btn = document.getElementById('btn-'+action);
-            btn.classList.add('btn-waiting');
-            btn.innerText = "PRESSIONE UMA TECLA...";
-        }
     </script>
+
 </body>
+
 </html>
