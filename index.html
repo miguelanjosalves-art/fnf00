@@ -2,1208 +2,953 @@
 <html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Tenna Boss Fight - Rhythm Engine</title>
 
-    <style>
-        body {
+<meta charset="UTF-8">
+
+<title>Ultimate Rhythm Engine</title>
+
+<style>
+
+body{
+    background:#0a0a0a;
+    color:white;
+    font-family:Arial, sans-serif;
+    display:flex;
+    justify-content:center;
+    margin:0;
+    padding:20px;
+    overflow:hidden;
+}
+
+#controls-sidebar{
+    width:260px;
+    padding:20px;
+    border-right:3px solid #444;
+    background:#111;
+}
+
+#game-container{
+    position:relative;
+    width:500px;
+    height:700px;
+    background:linear-gradient(
+        to bottom,
+        #111,
+        #000
+    );
+    overflow:hidden;
+    margin-left:20px;
+    border:5px solid #333;
+}
+
+.receptor{
+    width:70px;
+    height:25px;
+    position:absolute;
+    bottom:40px;
+    border-radius:12px;
+    border:3px solid white;
+}
+
+#rect-left{
+    background:#00ff00;
+    border-color:#00ff00;
+    box-shadow:0 0 20px #00ff00;
+}
+
+#rect-down{
+    background:#ff0000;
+    border-color:#ff0000;
+    box-shadow:0 0 20px #ff0000;
+}
+
+#rect-up{
+    background:#ffff00;
+    border-color:#ffff00;
+    box-shadow:0 0 20px #ffff00;
+}
+
+#rect-right{
+    background:#0000ff;
+    border-color:#0000ff;
+    box-shadow:0 0 20px #0000ff;
+}
+
+#rect-space{
+    background:#ff8800;
+    border-color:#ff8800;
+    box-shadow:0 0 20px #ff8800;
+}
+
+.note{
+    position:absolute;
+    width:70px;
+    height:22px;
+    border-radius:10px;
+}
+
+.active{
+    transform:scale(1.15);
+    filter:brightness(1.5);
+}
+
+#judge-text{
+    position:absolute;
+    top:250px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:50px;
+    font-weight:bold;
+    opacity:0;
+    transition:0.15s;
+    z-index:50;
+}
+
+#health-container{
+    position:absolute;
+    top:10px;
+    left:10px;
+    width:470px;
+    height:25px;
+    border:2px solid white;
+    background:#222;
+}
+
+#health-bar{
+    width:100%;
+    height:100%;
+    background:linear-gradient(
+        90deg,
+        lime,
+        yellow,
+        red
+    );
+}
+
+button,
+select,
+input{
+    background:#1a1a1a;
+    color:white;
+    border:2px solid #666;
+    padding:8px;
+}
+
+#game-over{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.9);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:999;
+}
+
+</style>
 
-            background: #111;
-            color: white;
-
-            font-family: 'Courier New', monospace;
-
-            display: flex;
-            justify-content: center;
-
-            margin: 0;
-            padding: 20px;
-
-        }
-
-        #controls-sidebar {
-
-            width: 240px;
-
-            padding: 20px;
-
-            border-right: 2px solid #ff00ff;
-
-        }
-
-        .control-input {
-
-            width: 50px;
-
-            text-align: center;
-
-            background: #222;
-            color: #ff00ff;
-
-            border: 1px solid #ff00ff;
-
-            margin-bottom: 10px;
-
-        }
-
-        #game-container {
-
-            position: relative;
-
-            width: 500px;
-            height: 600px;
-
-            border: 10px solid #ff00ff;
-
-            background: black;
-
-            overflow: hidden;
-
-            margin-left: 20px;
-
-        }
-
-        .receptor {
-
-            width: 60px;
-            height: 60px;
-
-            border: 3px solid #ff00ff;
-
-            position: absolute;
-
-            bottom: 20px;
-
-            z-index: 10;
-
-            transition: 0.05s;
-
-        }
-
-        .active {
-
-            background: #ff00ff;
-
-            box-shadow: 0 0 20px #ff00ff;
-
-            transform: scale(1.1);
-
-        }
-
-        .perfect {
-
-            border-color: #00ff88;
-
-            box-shadow: 0 0 25px #00ff88;
-
-        }
-
-        .good {
-
-            border-color: #ffff00;
-
-            box-shadow: 0 0 25px #ffff00;
-
-        }
-
-        .miss {
-
-            border-color: #ff3333;
-
-            box-shadow: 0 0 25px #ff3333;
-
-        }
-
-        .note {
-
-            position: absolute;
-
-            width: 60px;
-            height: 20px;
-
-            background: #ff00ff;
-
-            border-radius: 5px;
-
-            box-shadow: 0 0 12px #ff00ff;
-
-        }
-
-        #judge-text {
-
-            position: absolute;
-
-            top: 220px;
-            left: 50%;
-
-            transform: translateX(-50%);
-
-            font-size: 40px;
-            font-weight: bold;
-
-            opacity: 0;
-
-            pointer-events: none;
-
-            transition: 0.15s;
-
-            z-index: 50;
-
-        }
-
-        #health-container {
-
-            position: absolute;
-
-            top: 10px;
-            left: 10px;
-
-            width: 470px;
-            height: 20px;
-
-            border: 2px solid #ff00ff;
-
-            background: #222;
-
-            z-index: 30;
-
-        }
-
-        #health-bar {
-
-            width: 100%;
-            height: 100%;
-
-            background: linear-gradient(
-                90deg,
-                #00ff88,
-                #66ff00
-            );
-
-            transition: 0.15s;
-
-        }
-
-        button {
-
-            background: #111;
-
-            color: #ff00ff;
-
-            border: 2px solid #ff00ff;
-
-            padding: 10px;
-
-            cursor: pointer;
-
-            font-family: inherit;
-
-        }
-
-        select {
-
-            background: #111;
-
-            color: #ff00ff;
-
-            border: 2px solid #ff00ff;
-
-            padding: 5px;
-
-            width: 140px;
-
-        }
-
-        #info {
-
-            margin-top: 20px;
-
-            color: #ff00ff;
-
-        }
-    </style>
 </head>
 
 <body>
 
-    <div id="controls-sidebar">
-
-        <h2>CONTROLES</h2>
-
-        <label>
-            Esquerda:
-            <input type="text"
-                id="key-left"
-                class="control-input"
-                value="a">
-        </label>
-        <br>
-
-        <label>
-            Baixo:
-            <input type="text"
-                id="key-down"
-                class="control-input"
-                value="s">
-        </label>
-        <br>
-
-        <label>
-            Cima:
-            <input type="text"
-                id="key-up"
-                class="control-input"
-                value="w">
-        </label>
-        <br>
-
-        <label>
-            Direita:
-            <input type="text"
-                id="key-right"
-                class="control-input"
-                value="d">
-        </label>
-        <br>
-
-        <label>
-            Espaço:
-            <input type="text"
-                id="key-space"
-                class="control-input"
-                value="space">
-        </label>
-
-        <br><br>
-
-        <button onclick="saveControls()">
-            SALVAR
-        </button>
-
-        <br><br>
-
-        <label>Dificuldade:</label>
-        <br><br>
-
-        <select id="difficulty-select">
+<div id="controls-sidebar">
 
-            <option value="easy">
-                Fácil
-            </option>
+<h2>CONTROLES</h2>
 
-            <option value="medium">
-                Médio
-            </option>
+<label>Esquerda</label>
+<input type="text" id="key-left">
 
-            <option value="hard" selected>
-                Difícil
-            </option>
+<br><br>
 
-            <option value="extreme">
-                Extremo
-            </option>
+<label>Baixo</label>
+<input type="text" id="key-down">
 
-        </select>
+<br><br>
 
-        <div id="info">
-            Acerte a primeira nota para iniciar a música
-        </div>
+<label>Cima</label>
+<input type="text" id="key-up">
 
-    </div>
+<br><br>
 
-    <div id="game-container">
+<label>Direita</label>
+<input type="text" id="key-right">
 
-        <div id="health-container">
-            <div id="health-bar"></div>
-        </div>
+<br><br>
 
-        <div id="judge-text"></div>
+<label>Espaço</label>
+<input type="text" id="key-space">
 
-        <div class="receptor"
-            id="rect-left"
-            style="left:20px;">
-        </div>
+<br><br>
 
-        <div class="receptor"
-            id="rect-down"
-            style="left:120px;">
-        </div>
+<button onclick="saveControls()">
+SALVAR
+</button>
 
-        <div class="receptor"
-            id="rect-up"
-            style="left:220px;">
-        </div>
+<br><br>
 
-        <div class="receptor"
-            id="rect-right"
-            style="left:320px;">
-        </div>
+<select id="difficulty-select">
 
-        <div class="receptor"
-            id="rect-space"
-            style="
-                left:420px;
-                display:none;
-            ">
-        </div>
+<option value="easy">
+Fácil
+</option>
 
-        <button
-            id="start-btn"
-            style="
-                position:absolute;
-                top:300px;
-                left:170px;
-                z-index:20;
-            "
-            onclick="startGame()">
+<option value="medium">
+Médio
+</option>
 
-            INICIAR
+<option value="hard" selected>
+Difícil
+</option>
 
-        </button>
+<option value="extreme">
+Extremo
+</option>
 
-    </div>
+</select>
 
-    <div id="youtube-player"
-        style="display:none;">
-    </div>
+<br><br>
 
-    <script>
+<select id="category-select">
 
-        // YOUTUBE API
+<option value="undertale">
+Undertale
+</option>
 
-        const tag =
-            document.createElement('script');
+<option value="deltarune">
+Deltarune
+</option>
 
-        tag.src =
-            "https://www.youtube.com/iframe_api";
+<option value="forsaken">
+Forsaken
+</option>
 
-        document.head.appendChild(tag);
+<option value="fnf">
+FNF
+</option>
 
-        // VARS
+</select>
 
-        let player;
+<br><br>
 
-        let gameRunning = false;
+<select id="song-select"></select>
 
-        let musicStarted = false;
+<br><br>
 
-        let visualTime = 0;
+<button onclick="startGame()">
+INICIAR
+</button>
 
-        let chart = [];
+</div>
 
-        let health = 100;
+<div id="game-container">
 
-        let difficulty = "hard";
+<div id="health-container">
+<div id="health-bar"></div>
+</div>
 
-        let lastFrame = performance.now();
+<div id="judge-text"></div>
 
-        const heldKeys = {};
+<div class="receptor"
+id="rect-left"
+style="left:20px;">
+</div>
 
-        // CONTROLES
+<div class="receptor"
+id="rect-down"
+style="left:120px;">
+</div>
 
-        let controls = JSON.parse(
-            localStorage.getItem('controls')
-        ) || {
+<div class="receptor"
+id="rect-up"
+style="left:220px;">
+</div>
 
-            left: 'a',
-            down: 's',
-            up: 'w',
-            right: 'd',
-            space: ' '
+<div class="receptor"
+id="rect-right"
+style="left:320px;">
+</div>
 
-        };
+<div class="receptor"
+id="rect-space"
+style="
+left:420px;
+display:none;
+">
+</div>
 
-        document.getElementById('key-left').value =
-            controls.left;
+<div id="game-over">
 
-        document.getElementById('key-down').value =
-            controls.down;
+<h1 style="
+font-size:60px;
+color:red;
+">
+GAME OVER
+</h1>
 
-        document.getElementById('key-up').value =
-            controls.up;
+<button
+onclick="location.reload()">
 
-        document.getElementById('key-right').value =
-            controls.right;
+REINICIAR
 
-        document.getElementById('key-space').value =
-            controls.space === ' '
-                ? 'space'
-                : controls.space;
+</button>
 
-        // SAVE
+</div>
 
-        function saveControls() {
+</div>
 
-            controls = {
+<div id="youtube-player"
+style="display:none;">
+</div>
 
-                left:
-                    document
-                    .getElementById('key-left')
-                    .value
-                    .toLowerCase(),
+<script>
 
-                down:
-                    document
-                    .getElementById('key-down')
-                    .value
-                    .toLowerCase(),
+const tag =
+document.createElement('script');
 
-                up:
-                    document
-                    .getElementById('key-up')
-                    .value
-                    .toLowerCase(),
+tag.src =
+"https://www.youtube.com/iframe_api";
 
-                right:
-                    document
-                    .getElementById('key-right')
-                    .value
-                    .toLowerCase(),
+document.head.appendChild(tag);
 
-                space:
-                    document
-                    .getElementById('key-space')
-                    .value
-                    .toLowerCase() === "space"
-                        ? " "
-                        : document
-                            .getElementById('key-space')
-                            .value
-                            .toLowerCase()
+let player;
 
-            };
+let gameRunning = false;
 
-            localStorage.setItem(
-                'controls',
-                JSON.stringify(controls)
-            );
+let chart = [];
 
-            alert("Controles salvos!");
+let visualTime = 0;
 
-        }
+let health = 100;
 
-        // VIDA
+let selectedSong = null;
 
-        function updateHealth() {
+let difficulty = "hard";
 
-            if (health < 0)
-                health = 0;
+let musicStarted = false;
 
-            if (health > 100)
-                health = 100;
+const songDatabase = {
 
-            document
-                .getElementById('health-bar')
-                .style.width =
-                health + '%';
+undertale:[
 
-            if (health <= 0) {
+{
+name:"MEGALOVANIA",
+id:"0FCvzsVlXpQ"
+},
 
-                gameRunning = false;
+{
+name:"Hopes And Dreams",
+id:"wbO3p7_Mf30"
+}
 
-                alert("GAME OVER");
+],
 
-                location.reload();
+deltarune:[
 
-            }
+{
+name:"BIG SHOT",
+id:"V31PVkwzpEY"
+},
 
-        }
+{
+name:"Attack Of The Killer Queen",
+id:"XR2QQMfeJbg"
+}
 
-        // FEEDBACK
+],
 
-        function judgeLane(lane, type) {
+forsaken:[
 
-            const rect =
-                document.getElementById(
-                    'rect-' + lane
-                );
+{
+name:"Forsaken Theme",
+id:"s_eDrqnHQAw"
+}
 
-            rect.classList.remove(
-                'perfect',
-                'good',
-                'miss'
-            );
+],
 
-            rect.classList.add(type);
+fnf:[
 
-            setTimeout(() => {
+{
+name:"Accelerant",
+id:"ttfFKfTa6gM"
+},
 
-                rect.classList.remove(type);
+{
+name:"Triple Trouble",
+id:"PmXruhDoDuw"
+}
 
-            }, 150);
+]
 
-        }
+};
 
-        function showJudge(text) {
+let controls = JSON.parse(
+localStorage.getItem('controls')
+) || {
 
-            const el =
-                document.getElementById(
-                    'judge-text'
-                );
+left:'a',
+down:'s',
+up:'w',
+right:'d',
+space:' '
 
-            el.innerText = text;
+};
 
-            el.style.opacity = 1;
+document.getElementById('key-left').value =
+controls.left;
 
-            setTimeout(() => {
+document.getElementById('key-down').value =
+controls.down;
 
-                el.style.opacity = 0;
+document.getElementById('key-up').value =
+controls.up;
 
-            }, 120);
+document.getElementById('key-right').value =
+controls.right;
 
-        }
+document.getElementById('key-space').value =
+controls.space === ' '
+? 'space'
+: controls.space;
 
-        // START
+function saveControls(){
 
-        function startGame() {
+controls = {
 
-            difficulty =
-                document
-                .getElementById(
-                    'difficulty-select'
-                )
-                .value;
+left:
+document
+.getElementById('key-left')
+.value
+.toLowerCase(),
 
-            if (difficulty === "extreme") {
+down:
+document
+.getElementById('key-down')
+.value
+.toLowerCase(),
 
-                document
-                    .getElementById('rect-space')
-                    .style.display = 'block';
+up:
+document
+.getElementById('key-up')
+.value
+.toLowerCase(),
 
-            } else {
+right:
+document
+.getElementById('key-right')
+.value
+.toLowerCase(),
 
-                document
-                    .getElementById('rect-space')
-                    .style.display = 'none';
+space:
+document
+.getElementById('key-space')
+.value
+.toLowerCase() === 'space'
+? ' '
+: document
+.getElementById('key-space')
+.value
+.toLowerCase()
 
-            }
+};
 
-            generateChart();
+localStorage.setItem(
+'controls',
+JSON.stringify(controls)
+);
 
-            updateHealth();
+alert("Controles salvos!");
 
-            document
-                .getElementById('start-btn')
-                .remove();
+}
 
-            gameRunning = true;
+function updateSongList(){
 
-            lastFrame =
-                performance.now();
+const category =
+document
+.getElementById(
+'category-select'
+)
+.value;
 
-            requestAnimationFrame(updateGame);
+const select =
+document
+.getElementById(
+'song-select'
+);
 
-        }
+select.innerHTML = '';
 
-        // CHART
+songDatabase[category]
+.forEach(song => {
 
-        function generateChart() {
+const option =
+document
+.createElement('option');
 
-            chart = [];
+option.value =
+song.id;
 
-            const bpm = 150;
+option.innerText =
+song.name;
 
-            const beat = 60 / bpm;
+select.appendChild(option);
 
-            let lanes = [
+});
 
-                'left',
-                'down',
-                'up',
-                'right'
+}
 
-            ];
+document
+.getElementById(
+'category-select'
+)
+.addEventListener(
+'change',
+updateSongList
+);
 
-            if (
-                difficulty === "extreme"
-            ) {
+updateSongList();
 
-                lanes.push('space');
+function onYouTubeIframeAPIReady(){
 
-            }
+player = new YT.Player(
 
-            let lastLane = null;
+'youtube-player',
 
-            let measureStep =
-                beat * 2;
+{
+videoId:'0FCvzsVlXpQ'
+}
 
-            let patterns = [];
+);
 
-            // FÁCIL
+}
 
-            if (
-                difficulty === "easy"
-            ) {
+function startGame(){
 
-                patterns = [
+difficulty =
+document
+.getElementById(
+'difficulty-select'
+)
+.value;
 
-                    [0],
-                    [0, 0.5],
-                    [0, 1]
+const category =
+document
+.getElementById(
+'category-select'
+)
+.value;
 
-                ];
+const songId =
+document
+.getElementById(
+'song-select'
+)
+.value;
 
-            }
+selectedSong =
+songDatabase[category]
+.find(
+s => s.id === songId
+);
 
-            // MÉDIO
+if(
+selectedSong.name ===
+"Triple Trouble"
+){
 
-            else if (
-                difficulty === "medium"
-            ) {
+difficulty = "extreme";
 
-                patterns = [
+document
+.getElementById(
+'rect-space'
+)
+.style.display =
+'block';
 
-                    [0],
-                    [0, 0.5],
+}
 
-                    [0, 0.25, 0.5],
+player.loadVideoById(
+selectedSong.id
+);
 
-                    [0, 0.5, 1]
+generateChart();
 
-                ];
+gameRunning = true;
 
-            }
+requestAnimationFrame(
+updateGame
+);
 
-            // DIFÍCIL
+}
 
-            else if (
-                difficulty === "hard"
-            ) {
+function generateChart(){
 
-                patterns = [
+chart = [];
 
-                    [0],
-                    [0, 0.5],
+let lanes = [
 
-                    [0, 0.25, 0.5],
-                    [0, 0.25, 0.5, 0.75],
+'left',
+'down',
+'up',
+'right'
 
-                    [0, 0.33, 0.66],
+];
 
-                    [0, 0.25, 0.5, 0.75, 1],
+if(
+difficulty ===
+"extreme"
+){
 
-                    [0, 0.125, 0.25, 0.5]
+lanes.push('space');
 
-                ];
+}
 
-            }
+for(
+let i = 0;
+i < 450;
+i++
+){
 
-            // EXTREMO
+chart.push({
 
-            else {
+time:i * 0.28,
 
-                measureStep = beat;
+lane:
+lanes[
+Math.floor(
+Math.random()
+* lanes.length
+)
+],
 
-                patterns = [
+hit:false
 
-                    [0, 0.25, 0.5, 0.75],
+});
 
-                    [0, 0.125, 0.25, 0.375, 0.5],
+}
 
-                    [0, 0.2, 0.4, 0.6, 0.8],
+}
 
-                    [0, 0.1, 0.2, 0.3, 0.4, 0.5],
+function updateHealth(){
 
-                    [0, 0.16, 0.32, 0.48, 0.64]
+if(health < 0)
+health = 0;
 
-                ];
+document
+.getElementById(
+'health-bar'
+)
+.style.width =
+health + '%';
 
-            }
+if(health <= 0){
 
-            for (
+gameRunning = false;
 
-                let measure = 0;
+player.pauseVideo();
 
-                measure < 170;
+document
+.getElementById(
+'game-over'
+)
+.style.display =
+'flex';
 
-                measure += measureStep
+}
 
-            ) {
+}
 
-                const pattern =
-                    patterns[
-                    Math.floor(
-                        Math.random()
-                        * patterns.length
-                    )
-                    ];
+function showJudge(text){
 
-                pattern.forEach(step => {
+const el =
+document
+.getElementById(
+'judge-text'
+);
 
-                    const time =
-                        measure
-                        + (
-                            step
-                            * beat
-                            * 2
-                        );
+el.innerText = text;
 
-                    let lane =
-                        lanes[
-                        Math.floor(
-                            Math.random()
-                            * lanes.length
-                        )
-                        ];
+if(text === 'PERFECT'){
 
-                    if (
-                        Math.random() < 0.85
-                    ) {
+el.style.color =
+'#00ff88';
 
-                        while (
-                            lane === lastLane
-                        ) {
+}
 
-                            lane =
-                                lanes[
-                                Math.floor(
-                                    Math.random()
-                                    * lanes.length
-                                )
-                                ];
+else if(
+text === 'GOOD'
+){
 
-                        }
+el.style.color =
+'#ffff00';
 
-                    }
+}
 
-                    lastLane = lane;
+else{
 
-                    chart.push({
+el.style.color =
+'#ff3333';
 
-                        time: time,
-                        lane: lane,
-                        hit: false
+}
 
-                    });
+el.style.opacity = 1;
 
-                    // DOUBLES
+setTimeout(() => {
 
-                    const doubleChance =
+el.style.opacity = 0;
 
-                        difficulty === "easy"
-                            ? 0.03
+},150);
 
-                            : difficulty === "medium"
-                                ? 0.08
+}
 
-                                : difficulty === "hard"
-                                    ? 0.18
+function updateGame(){
 
-                                    : 0.35;
+if(!gameRunning)
+return;
 
-                    if (
-                        Math.random()
-                        < doubleChance
-                    ) {
+visualTime =
+player.getCurrentTime();
 
-                        let secondLane =
-                            lanes[
-                            Math.floor(
-                                Math.random()
-                                * lanes.length
-                            )
-                            ];
+const SPEED = 850;
 
-                        while (
-                            secondLane === lane
-                        ) {
+const RECEPTOR_Y = 580;
 
-                            secondLane =
-                                lanes[
-                                Math.floor(
-                                    Math.random()
-                                    * lanes.length
-                                )
-                                ];
+chart.forEach(note => {
 
-                        }
+if(note.hit)
+return;
 
-                        chart.push({
+const pos = {
 
-                            time: time,
-                            lane: secondLane,
-                            hit: false
+left:20,
+down:120,
+up:220,
+right:320,
+space:420
 
-                        });
+};
 
-                    }
+let y =
 
-                });
+(
+visualTime
+- note.time
+)
 
-            }
+* SPEED
 
-            chart.sort(
-                (a, b) =>
-                    a.time - b.time
-            );
++ RECEPTOR_Y;
 
-        }
+if(
+y > -100
+&& y < 800
+&& !note.el
+){
 
-        // YOUTUBE
+note.el =
+document
+.createElement('div');
 
-        function onYouTubeIframeAPIReady() {
+note.el.className =
+'note';
 
-            player =
-                new YT.Player(
+const colors = {
 
-                    'youtube-player',
+left:'#00ff00',
+down:'#ff0000',
+up:'#ffff00',
+right:'#0000ff',
+space:'#ff8800'
 
-                    {
+};
 
-                        videoId: 'F2PJbTuZlTU',
+note.el.style.background =
+colors[note.lane];
 
-                        events: {
+note.el.style.boxShadow =
+`0 0 20px ${colors[note.lane]}`;
 
-                            'onReady': () => {
+note.el.style.left =
+pos[note.lane]
++ 'px';
 
-                                generateChart();
+document
+.getElementById(
+'game-container'
+)
+.appendChild(note.el);
 
-                            }
+}
 
-                        }
+if(note.el){
 
-                    }
+note.el.style.top =
+y + 'px';
 
-                );
+}
 
-        }
+if(y > 800){
 
-        // UPDATE
+note.hit = true;
 
-        function updateGame(now) {
+if(note.el){
 
-            if (!gameRunning)
-                return;
+note.el.remove();
 
-            const delta =
-                (now - lastFrame)
-                / 1000;
+}
 
-            lastFrame = now;
+health -= 10;
 
-            if (!musicStarted) {
+showJudge('MISS');
 
-                visualTime += delta;
+updateHealth();
 
-            }
+}
 
-            else {
+});
 
-                visualTime =
-                    player.getCurrentTime();
+requestAnimationFrame(
+updateGame
+);
 
-            }
+}
 
-            const currentTime =
-                visualTime;
+window.addEventListener(
 
-            let SPEED = 620;
+'keydown',
 
-            if (
-                difficulty === "easy"
-            ) {
+(e)=>{
 
-                SPEED = 420;
+const key =
+e.key.toLowerCase();
 
-            }
+const lane =
 
-            else if (
-                difficulty === "medium"
-            ) {
+Object
+.keys(controls)
+.find(
 
-                SPEED = 520;
+k =>
+controls[k]
+=== key
 
-            }
+);
 
-            else if (
-                difficulty === "hard"
-            ) {
+if(!lane)
+return;
 
-                SPEED = 620;
+document
+.getElementById(
+'rect-' + lane
+)
+.classList.add(
+'active'
+);
 
-            }
+chart.forEach(note => {
 
-            else {
+if(note.hit)
+return;
 
-                SPEED = 820;
+const diff =
 
-            }
+Math.abs(
+note.time
+- visualTime
+);
 
-            const RECEPTOR_Y = 500;
+if(
 
-            chart.forEach(note => {
+note.lane === lane
+&& diff < 0.14
 
-                if (note.hit)
-                    return;
+){
 
-                const pos = {
+note.hit = true;
 
-                    left: 20,
-                    down: 120,
-                    up: 220,
-                    right: 320,
-                    space: 420
+if(note.el){
 
-                };
+note.el.remove();
 
-                let y =
+}
 
-                    (
-                        currentTime
-                        - note.time
-                    )
+if(diff < 0.05){
 
-                    * SPEED
+health += 2;
 
-                    + RECEPTOR_Y;
+showJudge(
+'PERFECT'
+);
 
-                if (
+}
 
-                    y > -100
-                    && y < 700
-                    && !note.el
+else{
 
-                ) {
+health += 1;
 
-                    note.el =
-                        document
-                        .createElement('div');
+showJudge(
+'GOOD'
+);
 
-                    note.el.className =
-                        'note';
+}
 
-                    document
-                        .getElementById(
-                            'game-container'
-                        )
-                        .appendChild(note.el);
+updateHealth();
 
-                }
+}
 
-                if (note.el) {
+});
 
-                    note.el.style.left =
-                        pos[note.lane]
-                        + 'px';
+if(!musicStarted){
 
-                    note.el.style.top =
-                        y + 'px';
+musicStarted = true;
 
-                }
+player.playVideo();
 
-                // MISS
+}
 
-                if (y > 750) {
+}
 
-                    if (note.el) {
+);
 
-                        note.el.remove();
+window.addEventListener(
 
-                    }
+'keyup',
 
-                    if (!note.hit) {
+(e)=>{
 
-                        health -= 8;
+const key =
+e.key.toLowerCase();
 
-                        updateHealth();
+const lane =
 
-                        judgeLane(
-                            note.lane,
-                            'miss'
-                        );
+Object
+.keys(controls)
+.find(
 
-                        showJudge("MISS");
+k =>
+controls[k]
+=== key
 
-                    }
+);
 
-                    note.hit = true;
+if(!lane)
+return;
 
-                }
+document
+.getElementById(
+'rect-' + lane
+)
+.classList.remove(
+'active'
+);
 
-            });
+}
 
-            requestAnimationFrame(
-                updateGame
-            );
+);
 
-        }
-
-        // KEYDOWN
-
-        window.addEventListener(
-
-            'keydown',
-
-            (e) => {
-
-                const key =
-                    e.key.toLowerCase();
-
-                const lane =
-
-                    Object
-                    .keys(controls)
-
-                    .find(
-
-                        k =>
-                            controls[k]
-                            === key
-
-                    );
-
-                if (!lane)
-                    return;
-
-                heldKeys[lane] = true;
-
-                const rect =
-
-                    document
-                    .getElementById(
-                        'rect-' + lane
-                    );
-
-                rect.classList.add(
-                    'active'
-                );
-
-                chart.forEach(n => {
-
-                    const currentTime =
-                        visualTime;
-
-                    const diff =
-
-                        Math.abs(
-                            n.time
-                            - currentTime
-                        );
-
-                    if (
-
-                        n.lane === lane
-                        && !n.hit
-                        && diff < 0.14
-
-                    ) {
-
-                        // START SONG
-
-                        if (
-                            !musicStarted
-                        ) {
-
-                            musicStarted =
-                                true;
-
-                            player.playVideo();
-
-                            document
-                                .getElementById(
-                                    'info'
-                                )
-                                .innerText =
-
-                                "Música iniciada!";
-
-                        }
-
-                        // PERFECT
-
-                        if (diff < 0.05) {
-
-                            judgeLane(
-                                lane,
-                                'perfect'
-                            );
-
-                            showJudge(
-                                "PERFECT"
-                            );
-
-                            health += 2;
-
-                        }
-
-                        // GOOD
-
-                        else {
-
-                            judgeLane(
-                                lane,
-                                'good'
-                            );
-
-                            showJudge(
-                                "GOOD"
-                            );
-
-                            health += 1;
-
-                        }
-
-                        updateHealth();
-
-                        n.hit = true;
-
-                        if (n.el) {
-
-                            n.el.remove();
-
-                        }
-
-                    }
-
-                });
-
-            }
-
-        );
-
-        // KEYUP
-
-        window.addEventListener(
-
-            'keyup',
-
-            (e) => {
-
-                const key =
-                    e.key.toLowerCase();
-
-                const lane =
-
-                    Object
-                    .keys(controls)
-
-                    .find(
-
-                        k =>
-                            controls[k]
-                            === key
-
-                    );
-
-                if (!lane)
-                    return;
-
-                heldKeys[lane] = false;
-
-                document
-                    .getElementById(
-                        'rect-' + lane
-                    )
-                    .classList.remove(
-                        'active'
-                    );
-
-            }
-
-        );
-
-    </script>
+</script>
 
 </body>
-
 </html>
